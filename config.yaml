@@ -1,0 +1,10 @@
+
+
+h5_source_path: dest/patches/
+hdf_extension: .h5
+target_patch_size: 256
+limit: 100
+
+transforms:
+  prewhiten: False
+  using_imagenet: False
