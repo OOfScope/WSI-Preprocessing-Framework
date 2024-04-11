@@ -165,3 +165,6 @@ out
 .DS_Store
 *.svs
 src
+*.jpg
+*.jpeg
+sample????

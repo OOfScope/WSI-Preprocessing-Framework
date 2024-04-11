@@ -1,9 +1,15 @@
 
+is_diffinfinite: True # we are not extracting from svs files
+diffinfinite_macro_path: diffinfinite_macropatches/
+diffinfinite_out_path: diffinfinite_out/
+out_patch_size: 256
+grayscale_patches: False
 
 h5_source_path: dest/patches/
+slide_ext: '.svs' # unused
 hdf_extension: .h5
 target_patch_size: 256
-limit: 100
+limit: 100  # limit = -1 disables the limit, default: -1
 
 transforms:
   prewhiten: False
