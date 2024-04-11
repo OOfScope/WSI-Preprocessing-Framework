@@ -64,7 +64,7 @@ def is_diffinfinite(config: Munch):
 
 def is_wsi(config: Munch):
 
-    output_path = "out/"
+    output_path = config.wsi_output_path
 
     c_transforms = get_transforms(
         config.transforms.using_imagenet, config.transforms.prewhiten
@@ -122,10 +122,6 @@ def main():
     args = parser.parse_args()
 
     config = load_config(args.config_path)
-
-    src_path = "/Users/mich/Desktop/WSI-Patch-Extractor/new_dest_slow/patches/LUAD-TCGA-05-4417-01Z-00-DX1.h5"
-
-    csvpath = os.path.join(src_path, "process_list_autogen.csv")
 
     if config.is_diffinfinite:
         is_diffinfinite(config)

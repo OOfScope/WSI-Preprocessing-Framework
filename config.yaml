@@ -9,6 +9,7 @@ h5_source_path: dest/patches/
 slide_ext: '.svs' # unused
 hdf_extension: .h5
 target_patch_size: 256
+wsi_output_path: out/
 limit: 100  # limit = -1 disables the limit, default: -1
 
 transforms:
