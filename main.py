@@ -1,5 +1,4 @@
 import h5py
-import os
 import numpy as np
 import torchvision.transforms as T
 
@@ -9,10 +8,13 @@ from PIL import Image
 from datasets_classes.dataset_h5 import Whole_Slide_Bag, WSI_Bag_Wrapper, Bag
 from torchvision import transforms
 import cv2
-
+from glob import glob
 
 from munch import Munch
 
+
+from os import mkdir, makedirs, listdir
+from os.path import basename, splitext, join
 
 def get_transforms(using_imagenet=False, prewhiten=False) -> T.Compose:
     mean = (0.5, 0.5, 0.5)
@@ -37,8 +39,8 @@ def split_macro_patch(sample_id, image_path, output_dir, out_patch_size, graysca
         macro_patch = cv2.imread(image_path)
         
     macro_patch_size = macro_patch.shape[0] # Assuming square macro patch !!!
-
-    os.makedirs(output_dir, exist_ok=True)
+    
+    makedirs(output_dir, exist_ok=True)
 
     num_patches = macro_patch_size // out_patch_size
 
@@ -46,21 +48,20 @@ def split_macro_patch(sample_id, image_path, output_dir, out_patch_size, graysca
         for j in range(num_patches):
             patch = macro_patch[i * out_patch_size: (i + 1) * out_patch_size,
                                     j * out_patch_size: (j + 1) * out_patch_size]
-
-            patch_filename = os.path.join(output_dir, f"{sample_id}_x_{i}_y_{j}.jpg")
+            sample_id_number = sample_id[6:]
+            patch_filename = join(output_dir, f"{sample_id_number}_x_{i}_y_{j}.jpg")
             cv2.imwrite(patch_filename, patch)
             
 def is_diffinfinite(config: Munch):
     
     input_dir = config.diffinfinite_macro_path
     output_base_dir = config.diffinfinite_out_path
-    
-    for filename in os.listdir(input_dir):
-        if filename.endswith(".jpg"):
-            image_path = os.path.join(input_dir, filename)
-            output_dir = os.path.join(output_base_dir, os.path.splitext(filename)[0])  # Create separate output directory for each macro patch
-            sample_id = os.path.splitext(filename)[0][6:]
-            split_macro_patch(sample_id, image_path, output_dir, config.out_patch_size, config.grayscale_patches)
+    #for filename in os.listdir(input_dir):
+
+    for image_path in glob(input_dir + '/**/*.jpg', recursive=True):
+        sample_id = splitext(basename(image_path))[0]
+        output_dir = join(output_base_dir, sample_id)  # Create separate output directory for each macro patch
+        split_macro_patch(sample_id, image_path, output_dir, config.out_patch_size, config.grayscale_patches)
 
 
 def is_wsi(config: Munch):
@@ -73,7 +74,7 @@ def is_wsi(config: Munch):
 
     bags_dataset = WSI_Bag_Wrapper()
 
-    for slide_name in os.listdir(config.h5_source_path):
+    for slide_name in listdir(config.h5_source_path):
         if slide_name.endswith(config.hdf_extension):
             slide = Whole_Slide_Bag(
                 config.h5_source_path + slide_name,
@@ -84,20 +85,20 @@ def is_wsi(config: Munch):
             bags_dataset.add_bag(slide, slide_name.split(config.hdf_extension)[0])
 
     try:
-        os.mkdir(output_path)
+        mkdir(output_path)
     except FileExistsError as e:
         print(f"\n\nOut Directory '{output_path}' already exists\n\n")
         exit(1)
 
     for bag in bags_dataset:
         cont = 0
-        dir = os.path.join(output_path, bag.filename_noext)
-        os.mkdir(dir)
+        dir = join(output_path, bag.filename_noext)
+        mkdir(dir)
         for img, coords in bag.wsi:
             if config.limit == -1 or cont < config.limit:
                 tra = T.ToPILImage()
                 im = tra(img.squeeze(0))
-                patch_name = os.path.join(
+                patch_name = join(
                     dir,
                     "_x_" + str(int(coords[0])) + "_y_" + str(int(coords[1])) + ".jpg",
                 )
