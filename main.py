@@ -29,7 +29,7 @@ def get_transforms(using_imagenet=False, prewhiten=False) -> T.Compose:
 
     return T.Compose(t)
 
-def split_macro_patch(image_path, output_dir, out_patch_size, grayscale=False):
+def split_macro_patch(sample_id, image_path, output_dir, out_patch_size, grayscale=False):
     
     if grayscale:
         macro_patch = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -47,7 +47,7 @@ def split_macro_patch(image_path, output_dir, out_patch_size, grayscale=False):
             patch = macro_patch[i * out_patch_size: (i + 1) * out_patch_size,
                                     j * out_patch_size: (j + 1) * out_patch_size]
 
-            patch_filename = os.path.join(output_dir, f"patch_{i}_{j}.jpg")
+            patch_filename = os.path.join(output_dir, f"{sample_id}_x_{i}_y_{j}.jpg")
             cv2.imwrite(patch_filename, patch)
             
 def is_diffinfinite(config: Munch):
@@ -59,7 +59,8 @@ def is_diffinfinite(config: Munch):
         if filename.endswith(".jpg"):
             image_path = os.path.join(input_dir, filename)
             output_dir = os.path.join(output_base_dir, os.path.splitext(filename)[0])  # Create separate output directory for each macro patch
-            split_macro_patch(image_path, output_dir, config.out_patch_size, config.grayscale_patches)
+            sample_id = os.path.splitext(filename)[0][6:]
+            split_macro_patch(sample_id, image_path, output_dir, config.out_patch_size, config.grayscale_patches)
 
 
 def is_wsi(config: Munch):
