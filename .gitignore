@@ -166,5 +166,6 @@ out
 *.svs
 src
 *.jpg
+*.png
 *.jpeg
 sample????

@@ -1,10 +1,18 @@
 
+# diffinfinite
 is_diffinfinite: True # we are not extracting from svs files
 diffinfinite_macro_path: diffinfinite_macropatches/
 diffinfinite_out_path: diffinfinite_out/
-out_patch_size: 256
+out_patch_size: 1024
 grayscale_patches: False
+using_masks: True
+generate_color_mapped_masks: True
 
+split:
+  enabled: True
+  factor: 4
+
+# traditional scans
 h5_source_path: dest/patches/
 slide_ext: '.svs' # unused
 hdf_extension: .h5

@@ -11,10 +11,11 @@ import cv2
 from glob import glob
 
 from munch import Munch
-
+import pandas as pd
 
 from os import mkdir, makedirs, listdir
 from os.path import basename, splitext, join
+import torch
 
 def get_transforms(using_imagenet=False, prewhiten=False) -> T.Compose:
     mean = (0.5, 0.5, 0.5)
@@ -31,7 +32,7 @@ def get_transforms(using_imagenet=False, prewhiten=False) -> T.Compose:
 
     return T.Compose(t)
 
-def split_macro_patch(sample_id, image_path, output_dir, out_patch_size, grayscale=False):
+def split_macro_patch(sample_id, sample_id_number, image_path, output_dir, out_patch_size, grayscale=False):
     
     if grayscale:
         macro_patch = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -48,20 +49,102 @@ def split_macro_patch(sample_id, image_path, output_dir, out_patch_size, graysca
         for j in range(num_patches):
             patch = macro_patch[i * out_patch_size: (i + 1) * out_patch_size,
                                     j * out_patch_size: (j + 1) * out_patch_size]
-            sample_id_number = sample_id[6:]
             patch_filename = join(output_dir, f"{sample_id_number}_x_{i}_y_{j}.jpg")
             cv2.imwrite(patch_filename, patch)
             
-def is_diffinfinite(config: Munch):
+def load_assets(asset_paths):
+    try:
+        # sorting according to basename and not full path (bug: "mask" is a folder hence wrong classification)
+        image_paths = [path for path in asset_paths if not basename(path).endswith('_mask.png')]
+        mask_paths = [path for path in asset_paths if basename(path).endswith('_mask.png')]
+        
+        image_paths.sort(key=lambda x: int(basename(x).split('.')[0][-4:]))
+        mask_paths.sort(key=lambda x: int(basename(x).split('_')[0][-4:]))
+        
+        images = []
+        masks = []
+        
+        for image_path, mask_path in zip(image_paths, mask_paths):
+            image = Image.open(image_path)
+            images.append(transforms.ToTensor()(image))
+            
+            mask = Image.open(mask_path).convert('L')  # Convert to grayscale
+            masks.append(transforms.ToTensor()(mask))
+        
+        # lists to tensors
+        images_tensor = torch.stack(images)
+        masks_tensor = torch.stack(masks)
+        
+        assert len(images) != 0 and len(masks) != 0, "images or masks list is empty, please check"
+        assert images_tensor.shape[0] == masks_tensor.shape[0], "Shape mismatch, some images or some masks might be missing, plase check"
+        
+        return images_tensor, masks_tensor
     
+    except Exception as e:
+        print(f"Error: {e}")       
+            
+def do_pre_split(image_tensors, mask_tensors, factor):
+    
+    for img, mask in zip(image_tensors, mask_tensors):
+        try:
+            
+            channels, height, width = img.size()
+
+            sub_width = width // factor
+            sub_height = height // factor
+            
+            for i in range(factor):
+                for j in range(factor):
+                    left = j * sub_width
+                    upper = i * sub_height
+                    right = (j + 1) * sub_width
+                    lower = (i + 1) * sub_height
+
+                    sub_image_tensor = img[:, upper:lower, left:right]
+                    sub_mask_tensor = mask[:, upper:lower, left:right]                    
+                    
+                    sub_image = transforms.ToPILImage()(sub_image_tensor.squeeze())
+                    sub_mask = transforms.ToPILImage()(sub_mask_tensor.squeeze())
+
+                    sub_image.save(f'sub_image_{i}_{j}.png')
+                    sub_mask.save(f'sub_mask_{i}_{j}.png')
+
+            print("Image pre-split success")
+            
+        except Exception as e:
+            print(f"Error: {e}")
+
+                
+            
+def is_diffinfinite(config: Munch):
+        
     input_dir = config.diffinfinite_macro_path
     output_base_dir = config.diffinfinite_out_path
-    #for filename in os.listdir(input_dir):
+    
+    # masks are in png but I prefer to sort by substr and not by filext
+    assets = glob(input_dir + '/**/*.jpg', recursive=True) +  glob(input_dir + '/**/*.png')
+    
+    image_tensors, mask_tensors = load_assets(assets)
+    
+    
+    if config.split.enabled:
+        do_pre_split(image_tensors, mask_tensors, config.split.factor)
+    
+    
+    df = pd.DataFrame()
 
-    for image_path in glob(input_dir + '/**/*.jpg', recursive=True):
+
+
+    for image_path in assets:
         sample_id = splitext(basename(image_path))[0]
+
+        if 'mask' in sample_id and not config.using_masks:
+            continue
+        
+        sample_id_number = sample_id[6:10]
+        
         output_dir = join(output_base_dir, sample_id)  # Create separate output directory for each macro patch
-        split_macro_patch(sample_id, image_path, output_dir, config.out_patch_size, config.grayscale_patches)
+        split_macro_patch(sample_id, sample_id_number, image_path, output_dir, config.out_patch_size, config.grayscale_patches)
 
 
 def is_wsi(config: Munch):
