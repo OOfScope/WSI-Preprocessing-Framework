@@ -83,7 +83,15 @@ def load_assets(asset_paths):
     except Exception as e:
         print(f"Error: {e}")       
             
-def do_pre_split(image_tensors, mask_tensors, factor):
+def do_pre_split(image_tensors, mask_tensors, factor, out_path):
+    
+    try:
+        mkdir(out_path)
+    except Exception as e:
+        if(len(listdir(out_path)) != 0):
+            print(e)
+    
+    counter = 0
     
     for img, mask in zip(image_tensors, mask_tensors):
         try:
@@ -105,11 +113,15 @@ def do_pre_split(image_tensors, mask_tensors, factor):
                     
                     sub_image = transforms.ToPILImage()(sub_image_tensor.squeeze())
                     sub_mask = transforms.ToPILImage()(sub_mask_tensor.squeeze())
-
-                    sub_image.save(f'sub_image_{i}_{j}.png')
-                    sub_mask.save(f'sub_mask_{i}_{j}.png')
-
-            print("Image pre-split success")
+                    
+                    try:
+                        mkdir(f'{out_path}/{counter:04d}')
+                    except Exception as e:
+                        print(e)
+                        
+                    sub_image.save(f'{out_path}/{counter:04d}/sub_image_{counter:04d}.png')
+                    sub_mask.save(f'{out_path}/{counter:04d}/sub_mask_{counter:04d}.png')
+                    counter += 1
             
         except Exception as e:
             print(f"Error: {e}")
@@ -128,7 +140,7 @@ def is_diffinfinite(config: Munch):
     
     
     if config.split.enabled:
-        do_pre_split(image_tensors, mask_tensors, config.split.factor)
+        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.split.presplit_out_path)
     
     
     df = pd.DataFrame()
