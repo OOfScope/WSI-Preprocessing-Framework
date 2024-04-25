@@ -1,6 +1,7 @@
 
 # diffinfinite
 is_diffinfinite: True # we are not extracting from svs files
+patching_enabled: True
 diffinfinite_macro_path: diffinfinite_macropatches/
 diffinfinite_out_path: diffinfinite_out/
 out_patch_size: 1024
@@ -8,11 +9,14 @@ grayscale_patches: False
 using_masks: True
 generate_color_mapped_masks: True
 
+cmap_whole_masks: True
+cmap_whole_masks_out: whole_cmaps/
+
 split:
   enabled: True
   factor: 4
   presplit_out_path: diffinfinite_presplit_out/
-  gen_color_mapped_mask: True
+  gen_color_mapped_submasks: True
 
 # traditional scans
 h5_source_path: dest/patches/

@@ -108,7 +108,7 @@ def cmap_mask(mask):
     
     return cmapd_mask, transforms.ToPILImage()(cmapd_mask.squeeze())
 
-def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped_mask):
+def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped_submasks):
     
     try:
         mkdir(out_path)
@@ -148,8 +148,9 @@ def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped
                     sub_mask.save(f'{out_path}/{counter:04d}/sub_mask_{counter:04d}.png')
                     
                     
-                    print(np.unique(sub_mask))
-                    if gen_color_mapped_mask:
+                    print(f'sid {counter:04d} shows absolute labels: {np.unique(sub_mask)}')
+                    
+                    if gen_color_mapped_submasks:
                         _, cmapped_mask = cmap_mask(sub_mask)
                         cmapped_mask.save(f'{out_path}/{counter:04d}/sub_cmapped_mask_{counter:04d}.png')
 
@@ -170,25 +171,42 @@ def is_diffinfinite(config: Munch):
     
     image_tensors, mask_tensors = load_assets(assets)
     
-    
-    if config.split.enabled:
-        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.split.presplit_out_path, config.split.gen_color_mapped_mask)
+
+    if config.split.enabled and config.patching_enabled:
+        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.split.presplit_out_path, config.split.gen_color_mapped_submasks)
     
     
     df = pd.DataFrame()
 
+    if config.cmap_whole_masks:
+        try:
+            mkdir(output_base_dir + config.cmap_whole_masks_out)
+        except FileExistsError as e:
+            print(f"\n\nOut Directory '{output_base_dir + config.cmap_whole_masks_out}' already exists\n\n")
+            
 
+    for asset in assets:
+        
+        sample_id = splitext(basename(asset))[0]
+        sample_id_number = sample_id[6:10]
 
-    for image_path in assets:
-        sample_id = splitext(basename(image_path))[0]
+        if config.cmap_whole_masks:
+            
+            if 'mask' in sample_id:
+                whole_mask_pil = Image.open(asset)
+                arr = np.array(whole_mask_pil, dtype='uint8')
+                whole_mask_pil = Image.fromarray(arr)
+                _, cmapped_whole_mask = cmap_mask(whole_mask_pil)
+                cmapped_whole_mask.save(f'{output_base_dir}/{config.cmap_whole_masks_out}/cmapped_mask_{sample_id_number}.png')
+
 
         if 'mask' in sample_id and not config.using_masks:
             continue
         
-        sample_id_number = sample_id[6:10]
         
-        output_dir = join(output_base_dir, sample_id)  # Create separate output directory for each macro patch
-        split_macro_patch(sample_id, sample_id_number, image_path, output_dir, config.out_patch_size, config.grayscale_patches)
+        if config.patching_enabled:
+            output_dir = join(output_base_dir, sample_id)  # Create separate output directory for each macro patch
+            split_macro_patch(sample_id, sample_id_number, asset, output_dir, config.out_patch_size, config.grayscale_patches)
 
 
 def is_wsi(config: Munch):
