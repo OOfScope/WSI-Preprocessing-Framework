@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import torchvision.transforms as T
+from torchvision.transforms.functional import pil_to_tensor
 
 import argparse
 from utils import get_device, load_config
@@ -82,8 +83,32 @@ def load_assets(asset_paths):
     
     except Exception as e:
         print(f"Error: {e}")       
-            
-def do_pre_split(image_tensors, mask_tensors, factor, out_path):
+        
+        
+def cmap_mask(mask):
+    
+    color_map = {
+        0: (0, 0, 0),      # Unknown
+        1: (0, 0, 255),    # Carcinoma
+        2: (255, 0, 0),    # Necrosis
+        3: (0, 255, 0),    # Tumor Stroma
+        4: (0, 255, 255),  # Others
+    }
+
+    
+    # alternative: torch.zeros_like()
+    #rgb_image = torch.zeros((mask.size[0], mask.size[1], 3), dtype=torch.uint8)
+    
+    cmapd_mask = np.zeros((mask.size[0], mask.size[1], 3), dtype=np.uint8)
+    tmask = pil_to_tensor(mask)
+    tmask = tmask.squeeze()
+    
+    for value, color in color_map.items():
+        cmapd_mask[tmask == value] = color
+    
+    return cmapd_mask, transforms.ToPILImage()(cmapd_mask.squeeze())
+
+def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped_mask):
     
     try:
         mkdir(out_path)
@@ -121,6 +146,13 @@ def do_pre_split(image_tensors, mask_tensors, factor, out_path):
                         
                     sub_image.save(f'{out_path}/{counter:04d}/sub_image_{counter:04d}.png')
                     sub_mask.save(f'{out_path}/{counter:04d}/sub_mask_{counter:04d}.png')
+                    
+                    
+                    print(np.unique(sub_mask))
+                    if gen_color_mapped_mask:
+                        _, cmapped_mask = cmap_mask(sub_mask)
+                        cmapped_mask.save(f'{out_path}/{counter:04d}/sub_cmapped_mask_{counter:04d}.png')
+
                     counter += 1
             
         except Exception as e:
@@ -140,7 +172,7 @@ def is_diffinfinite(config: Munch):
     
     
     if config.split.enabled:
-        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.split.presplit_out_path)
+        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.split.presplit_out_path, config.split.gen_color_mapped_mask)
     
     
     df = pd.DataFrame()

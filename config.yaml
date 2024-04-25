@@ -12,6 +12,7 @@ split:
   enabled: True
   factor: 4
   presplit_out_path: diffinfinite_presplit_out/
+  gen_color_mapped_mask: True
 
 # traditional scans
 h5_source_path: dest/patches/
