@@ -229,8 +229,19 @@ def is_diffinfinite(config: Munch):
                 continue
             
             sample_id = splitext(basename(asset))[0]
-            sample_id_number = sample_id[9:14]
-            split_macro_patch(sample_id, sample_id_number, asset, output_dir, config.out_patch_size, config.grayscale_patches)
+            
+            if 'mask' in asset:
+                sample_id_number = sample_id[9:14]
+                asset_out_dir = output_dir + '/masks/' + sample_id_number
+                # alternative:
+                #asset_out_dir = output_dir + sample_id_number + /masks/
+            else:
+                sample_id_number = sample_id[10:14]
+                asset_out_dir = output_dir + '/patches/' + sample_id_number
+                # alternative:
+                #asset_out_dir = output_dir + sample_id_number + /patches/
+                
+            split_macro_patch(sample_id, sample_id_number, asset, asset_out_dir, config.out_patch_size, config.grayscale_patches)
 
 
 
