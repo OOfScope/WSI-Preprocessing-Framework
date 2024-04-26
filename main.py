@@ -14,9 +14,11 @@ from glob import glob
 from munch import Munch
 import pandas as pd
 
-from os import mkdir, makedirs, listdir
+from os import mkdir, makedirs, listdir, scandir
 from os.path import basename, splitext, join
 import torch
+
+from strategy import LabelingContext
 
 def get_transforms(using_imagenet=False, prewhiten=False) -> T.Compose:
     mean = (0.5, 0.5, 0.5)
@@ -151,8 +153,6 @@ def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped
                     sub_mask.save(f'{out_path}/{counter:04d}/sub_mask_{counter:04d}.png')
                     
                     
-                    print(f'sid {counter:04d} shows absolute labels: {np.unique(sub_mask)}')
-                    
                     if gen_color_mapped_submasks:
                         _, cmapped_mask = cmap_mask(sub_mask)
                         cmapped_mask.save(f'{out_path}/{counter:04d}/sub_cmapped_mask_{counter:04d}.png')
@@ -178,8 +178,6 @@ def is_diffinfinite(config: Munch):
     if config.split.enabled and config.patching_enabled:
         do_pre_split(image_tensors, mask_tensors, config.split.factor, config.diffinfinite_out_path + config.split.presplit_out_path, config.split.gen_color_mapped_submasks)
     
-    
-    df = pd.DataFrame()
 
     if config.cmap_whole_masks:
         try:
@@ -232,17 +230,107 @@ def is_diffinfinite(config: Munch):
             
             if 'mask' in asset:
                 sample_id_number = sample_id[9:14]
-                asset_out_dir = output_dir + '/masks/' + sample_id_number
-                # alternative:
+                asset_out_dir = output_dir + '/masks/' + sample_id_number                
+                # alternative tree:
                 #asset_out_dir = output_dir + sample_id_number + /masks/
             else:
                 sample_id_number = sample_id[10:14]
                 asset_out_dir = output_dir + '/patches/' + sample_id_number
-                # alternative:
+                # alternative tree:
                 #asset_out_dir = output_dir + sample_id_number + /patches/
                 
             split_macro_patch(sample_id, sample_id_number, asset, asset_out_dir, config.out_patch_size, config.grayscale_patches)
 
+    if config.annotator.enabled:
+        
+        supported_strategies = ['TopKLabeling', 'TopKThrLabeling']
+        
+        if not config.split.enabled and config.patching_enabled:
+            print(f"Sorry this leaf is not implemented at the moment")
+            exit(1)
+        
+        assert config.annotator.strategy in supported_strategies, 'unsupported annotator strategy'
+        
+        
+        if config.split.enabled and config.patching_enabled:
+            
+            dic = {}
+            masks_root_input_dir = config.diffinfinite_out_path + config.split.presplit_out_path
+            
+            samples_paths = [ f.path for f in scandir(masks_root_input_dir) if f.is_dir() ]
+            samples_paths.sort()
+            print(f'Found {samples_paths} presplits')
+            
+            assert len(samples_paths) > 0, 'invalid presplits found'
+            assert len(samples_paths) % 2 == 0, 'potential invalid presplits found'
+        
+            dic['sample_id'] = []
+            
+            dic['Unknown'] = []
+            dic['Carcinoma'] = []
+            dic['Necrosis'] = []
+            dic['Tumor_Stroma'] = []
+            dic['Others'] = []
+            
+            dic['ABS_Unknown'] = []
+            dic['ABS_Carcinoma'] = []
+            dic['ABS_Necrosis'] = []
+            dic['ABS_Tumor_Stroma'] = []
+            dic['ABS_Others'] = []
+            
+            for sample_path in samples_paths:
+                for asset in listdir(sample_path):
+                    # alternative: regexpression
+                    if 'mask' not in asset:
+                        continue
+                    if 'cmapped' in asset:
+                        continue
+                    
+                    sample_id_number = asset[9:13]
+                    maskdir = sample_path + '/' + asset
+                    mask = Image.open(maskdir)
+                    mask_tensor = pil_to_tensor(mask)
+                    abs_labels = np.unique(mask_tensor)
+                    print(f'sid "{asset}" shows absolute labels: {abs_labels}')
+                    
+                    
+                    dic['sample_id'].append(sample_id_number)
+                    
+                    not_in = [abs_l for abs_l in range(10) if abs_l not in abs_labels]
+
+                    for abs_l in abs_labels:
+                        if abs_l == 0:
+                            dic['ABS_Unknown'].append(1)
+                        if abs_l == 1:
+                            dic['ABS_Carcinoma'].append(1)
+                        if abs_l == 2:
+                            dic['ABS_Necrosis'].append(1)
+                        if abs_l == 3:
+                            dic['ABS_Tumor_Stroma'].append(1)
+                        if abs_l == 4:
+                            dic['ABS_Others'].append(1)
+                            
+                    for abs_l in not_in:
+                        if abs_l == 0:
+                            dic['ABS_Unknown'].append(0)
+                        if abs_l == 1:
+                            dic['ABS_Carcinoma'].append(0)
+                        if abs_l == 2:
+                            dic['ABS_Necrosis'].append(0)
+                        if abs_l == 3:
+                            dic['ABS_Tumor_Stroma'].append(0)
+                        if abs_l == 4:
+                            dic['ABS_Others'].append(0)
+
+                    dic['Unknown'].append(0)
+                    dic['Carcinoma'].append(0)
+                    dic['Necrosis'].append(0)
+                    dic['Tumor_Stroma'].append(0)
+                    dic['Others'].append(0)
+                    
+                    df = pd.DataFrame(dic)
+                    df.set_index('sample_id', inplace=True)
+                    df.to_csv('we.csv')
 
 
 def is_wsi(config: Munch):
