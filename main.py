@@ -42,6 +42,10 @@ def split_macro_patch(sample_id, sample_id_number, image_path, output_dir, out_p
         
     macro_patch_size = macro_patch.shape[0] # Assuming square macro patch !!!
     
+    assert macro_patch_size > out_patch_size, 'unable to gen patches, check your config'
+    assert macro_patch_size % out_patch_size == 0, 'unable to gen patches, check your config'
+
+    
     makedirs(output_dir, exist_ok=True)
 
     num_patches = macro_patch_size // out_patch_size
@@ -97,7 +101,6 @@ def cmap_mask(mask):
 
     
     # alternative: torch.zeros_like()
-    #rgb_image = torch.zeros((mask.size[0], mask.size[1], 3), dtype=torch.uint8)
     
     cmapd_mask = np.zeros((mask.size[0], mask.size[1], 3), dtype=np.uint8)
     tmask = pil_to_tensor(mask)
@@ -173,7 +176,7 @@ def is_diffinfinite(config: Munch):
     
 
     if config.split.enabled and config.patching_enabled:
-        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.split.presplit_out_path, config.split.gen_color_mapped_submasks)
+        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.diffinfinite_out_path + config.split.presplit_out_path, config.split.gen_color_mapped_submasks)
     
     
     df = pd.DataFrame()
@@ -200,13 +203,35 @@ def is_diffinfinite(config: Munch):
                 cmapped_whole_mask.save(f'{output_base_dir}/{config.cmap_whole_masks_out}/cmapped_mask_{sample_id_number}.png')
 
 
-        if 'mask' in sample_id and not config.using_masks:
+        if 'mask' in sample_id and not config.using_masks:  # might remove it
             continue
         
-        
         if config.patching_enabled:
-            output_dir = join(output_base_dir, sample_id)  # Create separate output directory for each macro patch
+            if config.split.enabled:
+                continue
+            else:    
+                output_dir = join(output_base_dir, sample_id)  # Create separate output directory for each macro patch
+                split_macro_patch(sample_id, sample_id_number, asset, output_dir, config.out_patch_size, config.grayscale_patches)
+
+    if config.split.enabled and config.patching_enabled: # I want to patch my presplit dataset
+        
+        input_dir = config.diffinfinite_out_path + config.split.presplit_out_path
+        output_dir = config.diffinfinite_out_path + config.split.patched_split_out
+        assets = glob(input_dir + '/**/*.png', recursive=True)
+        
+        try:
+            mkdir(output_dir)
+        except Exception as e:
+            print(e)
+        
+        for asset in assets:
+            if 'cmapped' in asset:
+                continue
+            
+            sample_id = splitext(basename(asset))[0]
+            sample_id_number = sample_id[9:14]
             split_macro_patch(sample_id, sample_id_number, asset, output_dir, config.out_patch_size, config.grayscale_patches)
+
 
 
 def is_wsi(config: Munch):
