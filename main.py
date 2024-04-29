@@ -161,8 +161,22 @@ def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped
             
         except Exception as e:
             print(f"Error: {e}")
-
                 
+def calc_tensor_perc(tensor, diffinf_n_labels = 5) -> dict:
+    unique_values, counts = np.unique(tensor, return_counts=True)
+    perc_label_dict = {}
+
+    for i in range(diffinf_n_labels):
+        perc_label_dict[i] = 0
+    
+    total_elements = tensor.numel()
+    for value, count in zip(unique_values, counts):
+        perc = tensor[tensor == value].numel() / total_elements
+        perc_label_dict[value] = perc
+    
+    assert sum(perc_label_dict.values()) == 1, 'sum of percentages is not equal to 1'
+    
+    return perc_label_dict
             
 def is_diffinfinite(config: Munch):
         
@@ -278,6 +292,12 @@ def is_diffinfinite(config: Munch):
             dic['ABS_Tumor_Stroma'] = []
             dic['ABS_Others'] = []
             
+            dic['PERC_Unknown'] = []
+            dic['PERC_Carcinoma'] = []
+            dic['PERC_Necrosis'] = []
+            dic['PERC_Tumor_Stroma'] = []
+            dic['PERC_Others'] = []
+            
             for sample_path in samples_paths:
                 for asset in listdir(sample_path):
                     # alternative: regexpression
@@ -327,10 +347,31 @@ def is_diffinfinite(config: Munch):
                     dic['Necrosis'].append(0)
                     dic['Tumor_Stroma'].append(0)
                     dic['Others'].append(0)
+
                     
+                    
+                    percs = calc_tensor_perc(mask_tensor)
+                    
+                    diffinfinite_n_labels = 5
+
+                    for prc_l in percs.keys():
+                        if prc_l == 0:
+                            dic['PERC_Unknown'].append(percs[prc_l])
+                        if prc_l == 1:
+                            dic['PERC_Carcinoma'].append(percs[prc_l])
+                        if prc_l == 2:
+                            dic['PERC_Necrosis'].append(percs[prc_l])
+                        if prc_l == 3:
+                            dic['PERC_Tumor_Stroma'].append(percs[prc_l])
+                        if prc_l == 4:
+                            dic['PERC_Others'].append(percs[prc_l])
+                            
+                            
+                            
                     df = pd.DataFrame(dic)
-                    df.set_index('sample_id', inplace=True)
-                    df.to_csv('we.csv')
+                    df.set_index('sample_id', inplace=True)        
+
+                    df.to_csv(config.annotator.csv_filename)
 
 
 def is_wsi(config: Munch):

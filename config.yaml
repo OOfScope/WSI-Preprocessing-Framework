@@ -25,6 +25,7 @@ annotator:
   k: 2
   thr: 0.1
   compute_perc_by_ignoring_unknown_class: True
+  csv_filename: 'annotator.csv'
 
 # traditional scans
 h5_source_path: dest/patches/
