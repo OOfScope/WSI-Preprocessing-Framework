@@ -290,16 +290,17 @@ def is_diffinfinite(config: Munch):
             
             samples_paths = [ f.path for f in scandir(masks_root_input_dir) if f.is_dir() ]
             samples_paths.sort()
-            print(f'Found {samples_paths} presplits')
+            print(f'\nFound {samples_paths} presplits')
             
             assert len(samples_paths) > 0, 'invalid presplits found'
             assert len(samples_paths) % 2 == 0, 'potential invalid presplits found'
-        
-            dic['sample_id'] = []
             
             classes = ['Unknown', 'Carcinoma', 'Necrosis', 'Tumor_Stroma', 'Others']
-            ABS_classes = ['ABS_Unknown', 'ABS_Carcinoma', 'ABS_Necrosis', 'ABS_Tumor_Stroma', 'ABS_Others']
-            PERC_classes = ['PERC_Unknown', 'PERC_Carcinoma', 'PERC_Necrosis', 'PERC_Tumor_Stroma', 'PERC_Others']
+            ABS_classes = [f'ABS_{c}' for c in classes]
+            PERC_classes = [f'PERC_{c}' for c in classes]
+            
+            
+            dic['sample_id'] = []
             
             for c in classes:
                 dic[c] = []
@@ -310,6 +311,9 @@ def is_diffinfinite(config: Munch):
             for c in PERC_classes:
                 dic[c] = []
                 
+                
+            strategy_signature = labeling_context.labeling_strategy.get_strategy_signature()
+            dic['strategy_signature'] = [strategy_signature] * len(samples_paths)
             
             for sample_path in samples_paths:
                 for asset in listdir(sample_path):
@@ -328,7 +332,6 @@ def is_diffinfinite(config: Munch):
                     
                     
                     dic['sample_id'].append(sample_id_number)
-
 
                     for c in ABS_classes:
                         dic[c].append(0)
@@ -357,9 +360,9 @@ def is_diffinfinite(config: Munch):
                         dic[classes[l]][-1] = 1
 
 
-                    df = pd.DataFrame(dic)
-                    df.set_index('sample_id', inplace=True)
-                    df.to_csv(config.annotator.csv_filename)
+            df = pd.DataFrame(dic)
+            df.set_index('sample_id', inplace=True)
+            df.to_csv(config.annotator.csv_filename)
 
 
 def is_wsi(config: Munch):

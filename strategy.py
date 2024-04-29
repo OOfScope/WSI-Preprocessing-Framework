@@ -7,9 +7,13 @@ class LabelingStrategy(ABC):
     def annotate(self):
         pass
     
+    @abstractmethod
+    def get_strategy_signature(self):
+        pass
+    
     def set_perc_dict(self, perc_dict):
         self.perc_dict = perc_dict
-    
+
 
 class TopKLabeling(LabelingStrategy):
     def __init__(self, k:int):
@@ -18,6 +22,10 @@ class TopKLabeling(LabelingStrategy):
     
     def annotate(self):
         return sorted(self.perc_dict.items(), key=lambda x: x[1], reverse=True)[:self.k]
+    
+    def get_strategy_signature(self):
+        return f"TopKLabeling_k{self.k}"
+
 
 class TopKThrLabeling(LabelingStrategy):
     def __init__(self, k:int, thr:float):
@@ -27,6 +35,8 @@ class TopKThrLabeling(LabelingStrategy):
     def annotate(self):
         pass        
         
+    def get_strategy_signature(self):
+        return f"TopKThrLabeling_k{self.k}_thr{self.thr}"    
         
 class LabelingContext:
     def __init__(self, labeling_strategy:LabelingStrategy):
