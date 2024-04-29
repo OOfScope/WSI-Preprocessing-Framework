@@ -18,7 +18,7 @@ from os import mkdir, makedirs, listdir, scandir
 from os.path import basename, splitext, join
 import torch
 
-from strategy import LabelingContext
+from strategy import LabelingContext, TopKLabeling, TopKThrLabeling
 
 def get_transforms(using_imagenet=False, prewhiten=False) -> T.Compose:
     mean = (0.5, 0.5, 0.5)
@@ -174,7 +174,7 @@ def calc_tensor_perc(tensor, diffinf_n_labels = 5) -> dict:
         perc = tensor[tensor == value].numel() / total_elements
         perc_label_dict[value] = perc
     
-    assert sum(perc_label_dict.values()) == 1, 'sum of percentages is not equal to 1'
+    assert sum(perc_label_dict.values()) == 1, 'sum of mask tensor percentages is not equal to 1'
     
     return perc_label_dict
             
@@ -254,10 +254,27 @@ def is_diffinfinite(config: Munch):
                 #asset_out_dir = output_dir + sample_id_number + /patches/
                 
             split_macro_patch(sample_id, sample_id_number, asset, asset_out_dir, config.out_patch_size, config.grayscale_patches)
+            
+            
+            
+            
 
     if config.annotator.enabled:
         
         supported_strategies = ['TopKLabeling', 'TopKThrLabeling']
+                            
+        assert config.annotator.strategy in supported_strategies, 'unsupported annotator strategy'
+        assert config.annotator.k > 0, 'k must be greater than 0'
+        assert config.annotator.thr > 0.001, 'thr must be greater than 0.001'
+        
+        labeling_context = None
+        
+        if config.annotator.strategy == 'TopKLabeling':
+            labeling_context = LabelingContext(TopKLabeling(config.annotator.k))
+        elif config.annotator.strategy == 'TopKThrLabeling':
+            labeling_context = LabelingContext(TopKThrLabeling(config.annotator.k, config.annotator.thr))
+
+        
         
         if not config.split.enabled and config.patching_enabled:
             print(f"Sorry this leaf is not implemented at the moment")
@@ -280,23 +297,19 @@ def is_diffinfinite(config: Munch):
         
             dic['sample_id'] = []
             
-            dic['Unknown'] = []
-            dic['Carcinoma'] = []
-            dic['Necrosis'] = []
-            dic['Tumor_Stroma'] = []
-            dic['Others'] = []
+            classes = ['Unknown', 'Carcinoma', 'Necrosis', 'Tumor_Stroma', 'Others']
+            ABS_classes = ['ABS_Unknown', 'ABS_Carcinoma', 'ABS_Necrosis', 'ABS_Tumor_Stroma', 'ABS_Others']
+            PERC_classes = ['PERC_Unknown', 'PERC_Carcinoma', 'PERC_Necrosis', 'PERC_Tumor_Stroma', 'PERC_Others']
             
-            dic['ABS_Unknown'] = []
-            dic['ABS_Carcinoma'] = []
-            dic['ABS_Necrosis'] = []
-            dic['ABS_Tumor_Stroma'] = []
-            dic['ABS_Others'] = []
-            
-            dic['PERC_Unknown'] = []
-            dic['PERC_Carcinoma'] = []
-            dic['PERC_Necrosis'] = []
-            dic['PERC_Tumor_Stroma'] = []
-            dic['PERC_Others'] = []
+            for c in classes:
+                dic[c] = []
+                
+            for c in ABS_classes:
+                dic[c] = []
+                
+            for c in PERC_classes:
+                dic[c] = []
+                
             
             for sample_path in samples_paths:
                 for asset in listdir(sample_path):
@@ -315,62 +328,37 @@ def is_diffinfinite(config: Munch):
                     
                     
                     dic['sample_id'].append(sample_id_number)
+
+
+                    for c in ABS_classes:
+                        dic[c].append(0)
                     
-                    not_in = [abs_l for abs_l in range(10) if abs_l not in abs_labels]
-
                     for abs_l in abs_labels:
-                        if abs_l == 0:
-                            dic['ABS_Unknown'].append(1)
-                        if abs_l == 1:
-                            dic['ABS_Carcinoma'].append(1)
-                        if abs_l == 2:
-                            dic['ABS_Necrosis'].append(1)
-                        if abs_l == 3:
-                            dic['ABS_Tumor_Stroma'].append(1)
-                        if abs_l == 4:
-                            dic['ABS_Others'].append(1)
-                            
-                    for abs_l in not_in:
-                        if abs_l == 0:
-                            dic['ABS_Unknown'].append(0)
-                        if abs_l == 1:
-                            dic['ABS_Carcinoma'].append(0)
-                        if abs_l == 2:
-                            dic['ABS_Necrosis'].append(0)
-                        if abs_l == 3:
-                            dic['ABS_Tumor_Stroma'].append(0)
-                        if abs_l == 4:
-                            dic['ABS_Others'].append(0)
-
-                    dic['Unknown'].append(0)
-                    dic['Carcinoma'].append(0)
-                    dic['Necrosis'].append(0)
-                    dic['Tumor_Stroma'].append(0)
-                    dic['Others'].append(0)
-
+                        dic[ABS_classes[abs_l]][-1] = 1
                     
                     
                     percs = calc_tensor_perc(mask_tensor)
-                    
-                    diffinfinite_n_labels = 5
+                    labeling_context.set_perc_dict(percs)
 
                     for prc_l in percs.keys():
-                        if prc_l == 0:
-                            dic['PERC_Unknown'].append(percs[prc_l])
-                        if prc_l == 1:
-                            dic['PERC_Carcinoma'].append(percs[prc_l])
-                        if prc_l == 2:
-                            dic['PERC_Necrosis'].append(percs[prc_l])
-                        if prc_l == 3:
-                            dic['PERC_Tumor_Stroma'].append(percs[prc_l])
-                        if prc_l == 4:
-                            dic['PERC_Others'].append(percs[prc_l])
-                            
-                            
-                            
-                    df = pd.DataFrame(dic)
-                    df.set_index('sample_id', inplace=True)        
+                        dic[PERC_classes[prc_l]].append(percs[prc_l])                            
 
+
+                    processed_labels_with_percs = labeling_context.process_annotation()
+                    processed_labels = [label for label, perc in processed_labels_with_percs]
+
+                    print(f"\n{sample_id_number} processed labels: {processed_labels}")
+                    
+                    
+                    for c in classes:
+                        dic[c].append(0)
+                        
+                    for l in processed_labels:
+                        dic[classes[l]][-1] = 1
+
+
+                    df = pd.DataFrame(dic)
+                    df.set_index('sample_id', inplace=True)
                     df.to_csv(config.annotator.csv_filename)
 
 
