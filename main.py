@@ -324,7 +324,7 @@ def is_diffinfinite(config: Munch):
                     mask = Image.open(maskdir)
                     mask_tensor = pil_to_tensor(mask)
                     abs_labels = np.unique(mask_tensor)
-                    print(f'sid "{asset}" shows absolute labels: {abs_labels}')
+                    print(f'\nsid "{asset}" shows absolute labels: {abs_labels}')
                     
                     
                     dic['sample_id'].append(sample_id_number)
@@ -347,7 +347,7 @@ def is_diffinfinite(config: Munch):
                     processed_labels_with_percs = labeling_context.process_annotation()
                     processed_labels = [label for label, perc in processed_labels_with_percs]
 
-                    print(f"\n{sample_id_number} processed labels: {processed_labels}")
+                    print(f"{sample_id_number} processed labels: {processed_labels}\n")
                     
                     
                     for c in classes:
