@@ -21,7 +21,7 @@ split:
 
 annotator:
   enabled: True
-  strategy: 'TopKLabeling'  # [TopKLabeling, TopKThrLabeling]
+  strategy: 'TopKThrLabeling'  # [TopKLabeling, TopKThrLabeling]
   k: 2
   thr: 0.1
   compute_perc_by_ignoring_unknown_class: True

@@ -33,7 +33,7 @@ class TopKThrLabeling(LabelingStrategy):
         self.thr = thr
         
     def annotate(self):
-        pass        
+        return [(k, v) for k, v in self.perc_dict.items() if v >= self.thr][:self.k]        
         
     def get_strategy_signature(self):
         return f"TopKThrLabeling_k{self.k}_thr{self.thr}"    
