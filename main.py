@@ -17,6 +17,7 @@ import pandas as pd
 from os import mkdir, makedirs, listdir, scandir
 from os.path import basename, splitext, join
 import torch
+import matplotlib.pyplot as plt
 
 from strategy import LabelingContext, TopKLabeling, TopKThrLabeling
 
@@ -363,6 +364,27 @@ def is_diffinfinite(config: Munch):
             df = pd.DataFrame(dic)
             df.set_index('sample_id', inplace=True)
             df.to_csv(config.annotator.csv_filename)
+
+        if config.annotator.plot_class_distribution:
+            plot_out_dir = 'plots/'
+            try:
+                mkdir(plot_out_dir)
+            except Exception as e:
+                print(e)
+            plot_df = df[classes]
+            plot_df.plot(kind='bar', stacked=True)
+            plt.savefig(plot_out_dir + 'labels_per_sample.png')
+            
+            column_sums = plot_df.sum()
+
+            plt.figure(figsize=(8, 6))
+            column_sums.plot(kind='bar', color='skyblue')
+            plt.title('Total processed labels in the dataset')
+            plt.xlabel('Columns')
+            plt.ylabel('Samples having the label')
+            plt.xticks(rotation=45)
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            plt.savefig(plot_out_dir + 'classes_across_samples.png')
 
 
 def is_wsi(config: Munch):
