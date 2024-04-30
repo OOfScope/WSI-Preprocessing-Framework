@@ -365,18 +365,20 @@ def is_diffinfinite(config: Munch):
             df.set_index('sample_id', inplace=True)
             df.to_csv(config.annotator.csv_filename)
 
+        if config.annotator.plot_class_distribution or config.annotator.balancer.enabled:
+            plot_df = df[classes]
+            column_sums = plot_df.sum()
+
         if config.annotator.plot_class_distribution:
             plot_out_dir = 'plots/'
             try:
                 mkdir(plot_out_dir)
             except Exception as e:
                 print(e)
-            plot_df = df[classes]
             plot_df.plot(kind='bar', stacked=True)
             plt.savefig(plot_out_dir + 'labels_per_sample.png')
             
-            column_sums = plot_df.sum()
-
+            
             plt.figure(figsize=(8, 6))
             column_sums.plot(kind='bar', color='skyblue')
             plt.title('Total processed labels in the dataset')
@@ -385,7 +387,15 @@ def is_diffinfinite(config: Munch):
             plt.xticks(rotation=45)
             plt.grid(axis='y', linestyle='--', alpha=0.7)
             plt.savefig(plot_out_dir + 'classes_across_samples.png')
-
+            
+        if config.annotator.balancer.enabled:
+            if any(column_sums == 0):
+                print('\n-----------------------------------')
+                print('\n!! Some classes are not present at all in the dataset, balancer can not be applied')
+                print(f"Classes with 0 samples: {column_sums[column_sums == 0].index.tolist()}")
+                print('-----------------------------------\n')                
+                return
+            
 
 def is_wsi(config: Munch):
 

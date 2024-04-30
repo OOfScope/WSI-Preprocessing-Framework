@@ -27,6 +27,9 @@ annotator:
   compute_perc_by_ignoring_unknown_class: True
   csv_filename: 'annotator.csv'
   plot_class_distribution: True
+  balancer:
+    enabled: True
+    strategy: 'RandomUnderSampler'  # [RandomUnderSampler, RandomOverSampler, SMOTE]
 
 # traditional scans
 h5_source_path: dest/patches/
