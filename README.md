@@ -5,7 +5,7 @@
 
 ### Initial setup
 
-Let's assume that we start from a synthetic parent dataset made up of WSI `4096x4096` with their respective masks with values going from 0 to (n_classes - 1), recall the [diffinfinite](https://arxiv.org/abs/2306.13384) paper which reports that we can choose a generation on 5 classes or on 10 classes
+Let's assume that we start from a synthetic parent dataset made up of WSI `4096x4096` with their respective masks with values going from 0 to (n_classes - 1), recall the [diffinfinite](https://arxiv.org/abs/2306.13384) paper which reports that we can choose a generation on 5 classes or 10 classes
 
 
 > example starting synth wsi (ω=3, 4096x4096)
@@ -34,9 +34,9 @@ It is therefore possible to increase the size of the parent wsi as long as the s
 
 For better data understanding is possible to enable the `cmap_whole_masks`and/or the `gen_color_mapped_submasks` parameters in `config.yml`
 
-In this way we can bring a mask (visually all black but in reality contains values very close to black from 0 to 4) into more recognizable color codes
+In this way, we can bring a mask (visually all black but in reality contains values very close to black from 0 to 4) into more recognizable color codes
 
-> whole mask color mapping:
+> Whole mask color mapping:
 
 <img src="res/cmapped_whole_mask.png" width="250px">
 
@@ -60,7 +60,7 @@ In this way we can bring a mask (visually all black but in reality contains valu
 
 ### Patching
 
-Now we come to the actual patching, if we had enabled the pre-split we will patch from the output path of the pre-split otherwise the WSI parent images path defined in the config file
+Now we come to the actual patching, if we had enabled the pre-split we would patch from the output path of the pre-split otherwise the WSI parent images path defined in the config file
 
 Therefore, assuming we now have 16 wsi at 1024x1024 we can adjust the patch size in the config file by tuning `out_patch_size`, we will now assume it to be `256` thus obtaining 16 patches for each wsi
 
@@ -121,7 +121,7 @@ The output csv file will look like this (real sample):
 
 ### Balancer
 
-The balancer as of today simply asserts no class has 0 samples, if this happens the balancer will halt and lists all of the affected classes
+The balancer as of today simply asserts no class has 0 samples, if this happens the balancer will halt and list all of the affected classes
 
 To further facilitate this task, some graphs are constructed and saved in the `plots/` folder, such as the class graph across samples and the label graph across samples
 
@@ -130,7 +130,14 @@ To further facilitate this task, some graphs are constructed and saved in the `p
 <br>
 <img src="res/labels_per_sample.png" width="350px">
 
+#### Potential Balancing ideas
 
+Considering the importance and difficulty of having a balanced dataset in MIML problems this final part of the pipeline can be customizable, some ideas can be:
+
+- Introducing UnderSampling or OverSampling techniques in their Multi-Label variants like MLSMOTE or MLRUS (warning: this generates synthetic data starting from data that is already synthetic by interpolation)
+- Condition the diffinfinite generated masks by filtering them out by continuously computing the classes balance we have at the moment
+- Define a custom probability density function and bypass the diffinfinite mask generation step
+- Oversampling with diffinfinite by dropping the most represented class and swapping them with cherry-picked wsis that would eventually balance our dataset
 
 ## Non-Synth Scans Patching
 
@@ -138,7 +145,7 @@ Taking advantage of the old CLAM solution, which involved slow patching, we are 
 
 To achieve this we will calculate the HDF5 binary and extract from here all the patches along their coordinates
 
-Is also possible to choose among standard prewhitening or imagenet normalization
+Is also possible to choose among standard pre-whitening or imagenet normalization
 
 # Credits
 
