@@ -448,7 +448,7 @@ def is_wsi(config: Munch):
 def main():
 
     parser = argparse.ArgumentParser(
-        description="WSI-Preprocessing-Framework: preprocess wsis end to end."
+        description="WSI-Preprocessing-Framework: synthetic WSI preprocessing end to end."
     )
 
     parser.add_argument(
