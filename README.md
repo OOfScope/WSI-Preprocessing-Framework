@@ -1,4 +1,4 @@
-# WSI Preprocessing and Patching
+# WSI Preprocessing, Annotation and Patching
 
 
 ## Synthetic dataset pipeline (diffinfinite)
@@ -132,10 +132,16 @@ To further facilitate this task, some graphs are constructed and saved in the `p
 
 
 
-## TCGA Dataset
+## Non-Synth Scans Patching
+
+Taking advantage of the old CLAM solution, which involved slow patching, we are going to extract the patches with coordinates from the original TIFF files
+
+To achieve this we will calculate the HDF5 binary and extract from here all the patches along their coordinates
+
+Is also possible to choose among standard prewhitening or imagenet normalization
 
 # Credits
 
 The synthetic dataset has been obtained through [diffinfinite](https://arxiv.org/abs/2306.13384) DM
 
-The TCGA patching work is based on [CLAM](https://github.com/mahmoodlab/CLAM) slow patching algorithm
+The non-synthetic patching work is based on [CLAM](https://github.com/mahmoodlab/CLAM) slow patching algorithm
