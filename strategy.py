@@ -24,7 +24,7 @@ class TopKLabeling(LabelingStrategy):
         return sorted(self.perc_dict.items(), key=lambda x: x[1], reverse=True)[:self.k]
     
     def get_strategy_signature(self):
-        return f"TopKLabeling_k{self.k}"
+        return f"TopKLabeling_k@{self.k}"
 
 
 class TopKThrLabeling(LabelingStrategy):
@@ -36,7 +36,7 @@ class TopKThrLabeling(LabelingStrategy):
         return [(k, v) for k, v in self.perc_dict.items() if v >= self.thr][:self.k]        
         
     def get_strategy_signature(self):
-        return f"TopKThrLabeling_k{self.k}_thr{self.thr}"    
+        return f"TopKThrLabeling_k@{self.k}_thr@{self.thr}"    
         
 class LabelingContext:
     def __init__(self, labeling_strategy:LabelingStrategy):

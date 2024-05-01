@@ -62,7 +62,7 @@ In this way, we can bring a mask (visually all black but in reality contains val
 
 Now we come to the actual patching, if we had enabled the pre-split we would patch from the output path of the pre-split otherwise the WSI parent images path defined in the config file
 
-Therefore, assuming we now have 16 wsi at 1024x1024 we can adjust the patch size in the config file by tuning `out_patch_size`, we will now assume it to be `256` thus obtaining 16 patches for each wsi
+Therefore, assuming we now have 16 wsi at 1024x1024 we can adjust the patch size in the config file by tuning `out_patch_size`, let it be `256` thus obtaining 16 patches for each wsi
 
 > Note: masks too get patched, this can be useful to experiment (since we can compute the patch-level labels)
 
@@ -99,25 +99,25 @@ We've already introduced a couple of trivial strategies for annotating masks: To
 
 The output csv file will look like this (real sample):
 
-
 |sample_id|Unknown|Carcinoma|Necrosis|Tumor_Stroma|Others|ABS_Unknown|ABS_Carcinoma|ABS_Necrosis|ABS_Tumor_Stroma|ABS_Others|PERC_Unknown      |PERC_Carcinoma      |PERC_Necrosis        |PERC_Tumor_Stroma   |PERC_Others         |strategy_signature       |
 |---------|-------|---------|--------|------------|------|-----------|-------------|------------|----------------|----------|------------------|--------------------|---------------------|--------------------|--------------------|-------------------------|
-|0000     |1      |0        |1       |0           |0     |1          |1            |1           |1               |0         |0.8053102493286133|0.007275581359863281|0.13818359375        |0.04923057556152344 |0.0                 |TopKThrLabeling_k2_thr0.1|
-|0001     |1      |0        |0       |0           |1     |1          |0            |1           |0               |1         |0.8941097259521484|0.0                 |0.00035858154296875  |0.0                 |0.10553169250488281 |TopKThrLabeling_k2_thr0.1|
-|0002     |1      |0        |0       |0           |0     |1          |0            |0           |1               |1         |0.978510856628418 |0.0                 |0.0                  |1.52587890625e-05   |0.02147388458251953 |TopKThrLabeling_k2_thr0.1|
-|0003     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.8931102752685547|0.0                 |0.06301212310791016  |0.043877601623535156|0.0                 |TopKThrLabeling_k2_thr0.1|
-|0004     |1      |0        |0       |1           |0     |1          |0            |1           |1               |1         |0.7715072631835938|0.0                 |0.000125885009765625 |0.11653995513916016 |0.11182689666748047 |TopKThrLabeling_k2_thr0.1|
-|0005     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.9569787979125977|0.0                 |0.03603649139404297  |0.006984710693359375|0.0                 |TopKThrLabeling_k2_thr0.1|
-|0006     |1      |0        |0       |0           |0     |1          |0            |0           |0               |0         |1.0               |0.0                 |0.0                  |0.0                 |0.0                 |TopKThrLabeling_k2_thr0.1|
-|0007     |1      |0        |0       |0           |0     |1          |1            |1           |1               |0         |0.9847116470336914|0.00388336181640625 |0.0025119781494140625|0.008893013000488281|0.0                 |TopKThrLabeling_k2_thr0.1|
-|0008     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.9820270538330078|0.0                 |0.012581825256347656 |0.005391120910644531|0.0                 |TopKThrLabeling_k2_thr0.1|
-|0009     |1      |0        |1       |0           |0     |1          |0            |1           |1               |1         |0.7839956283569336|0.0                 |0.12654781341552734  |0.01989459991455078 |0.06956195831298828 |TopKThrLabeling_k2_thr0.1|
-|0010     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.991607666015625 |0.0                 |0.0007476806640625   |0.0076446533203125  |0.0                 |TopKThrLabeling_k2_thr0.1|
-|0011     |1      |0        |0       |0           |0     |1          |1            |1           |0               |0         |0.9488687515258789|0.002685546875      |0.048445701599121094 |0.0                 |0.0                 |TopKThrLabeling_k2_thr0.1|
-|0012     |1      |0        |0       |1           |0     |1          |1            |1           |1               |1         |0.5030860900878906|0.0001983642578125  |0.005748748779296875 |0.15685176849365234 |0.33411502838134766 |TopKThrLabeling_k2_thr0.1|
-|0013     |1      |0        |0       |0           |1     |1          |0            |0           |0               |1         |0.8333845138549805|0.0                 |0.0                  |0.0                 |0.16661548614501953 |TopKThrLabeling_k2_thr0.1|
-|0014     |1      |0        |0       |0           |0     |1          |0            |1           |1               |1         |0.9549198150634766|0.0                 |0.012845039367675781 |0.0003204345703125  |0.031914710998535156|TopKThrLabeling_k2_thr0.1|
-|0015     |1      |0        |0       |0           |0     |1          |1            |1           |1               |1         |0.9766769409179688|0.011180877685546875|0.0009765625         |0.011074066162109375|9.1552734375e-05    |TopKThrLabeling_k2_thr0.1|
+|0000     |1      |0        |1       |0           |0     |1          |1            |1           |1               |0         |0.8053102493286133|0.007275581359863281|0.13818359375        |0.04923057556152344 |0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0001     |1      |0        |0       |0           |1     |1          |0            |1           |0               |1         |0.8941097259521484|0.0                 |0.00035858154296875  |0.0                 |0.10553169250488281 |TopKThrLabeling_k@2_thr@0.1|
+|0002     |1      |0        |0       |0           |0     |1          |0            |0           |1               |1         |0.978510856628418 |0.0                 |0.0                  |1.52587890625e-05   |0.02147388458251953 |TopKThrLabeling_k@2_thr@0.1|
+|0003     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.8931102752685547|0.0                 |0.06301212310791016  |0.043877601623535156|0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0004     |1      |0        |0       |1           |0     |1          |0            |1           |1               |1         |0.7715072631835938|0.0                 |0.000125885009765625 |0.11653995513916016 |0.11182689666748047 |TopKThrLabeling_k@2_thr@0.1|
+|0005     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.9569787979125977|0.0                 |0.03603649139404297  |0.006984710693359375|0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0006     |1      |0        |0       |0           |0     |1          |0            |0           |0               |0         |1.0               |0.0                 |0.0                  |0.0                 |0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0007     |1      |0        |0       |0           |0     |1          |1            |1           |1               |0         |0.9847116470336914|0.00388336181640625 |0.0025119781494140625|0.008893013000488281|0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0008     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.9820270538330078|0.0                 |0.012581825256347656 |0.005391120910644531|0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0009     |1      |0        |1       |0           |0     |1          |0            |1           |1               |1         |0.7839956283569336|0.0                 |0.12654781341552734  |0.01989459991455078 |0.06956195831298828 |TopKThrLabeling_k@2_thr@0.1|
+|0010     |1      |0        |0       |0           |0     |1          |0            |1           |1               |0         |0.991607666015625 |0.0                 |0.0007476806640625   |0.0076446533203125  |0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0011     |1      |0        |0       |0           |0     |1          |1            |1           |0               |0         |0.9488687515258789|0.002685546875      |0.048445701599121094 |0.0                 |0.0                 |TopKThrLabeling_k@2_thr@0.1|
+|0012     |1      |0        |0       |1           |0     |1          |1            |1           |1               |1         |0.5030860900878906|0.0001983642578125  |0.005748748779296875 |0.15685176849365234 |0.33411502838134766 |TopKThrLabeling_k@2_thr@0.1|
+|0013     |1      |0        |0       |0           |1     |1          |0            |0           |0               |1         |0.8333845138549805|0.0                 |0.0                  |0.0                 |0.16661548614501953 |TopKThrLabeling_k@2_thr@0.1|
+|0014     |1      |0        |0       |0           |0     |1          |0            |1           |1               |1         |0.9549198150634766|0.0                 |0.012845039367675781 |0.0003204345703125  |0.031914710998535156|TopKThrLabeling_k@2_thr@0.1|
+|0015     |1      |0        |0       |0           |0     |1          |1            |1           |1               |1         |0.9766769409179688|0.011180877685546875|0.0009765625         |0.011074066162109375|9.1552734375e-05    |TopKThrLabeling_k@2_thr@0.1|
+
 
 ### Balancer
 
@@ -141,9 +141,9 @@ Considering the importance and difficulty of having a balanced dataset in MIML p
 
 ## Non-Synth Scans Patching
 
-Taking advantage of the old CLAM solution, which involved slow patching, we are going to extract the patches with coordinates from the original TIFF files
+Taking advantage of the old CLAM solution, which involved slow patching, we extract the patches along with coordinates from the original TIFF files
 
-To achieve this we will calculate the HDF5 binary and extract from here all the patches along their coordinates
+To achieve this we exploit the HDF5 binary built by CLAM's `create_patches.py` and read and adapt from there all the patches along their coordinates
 
 Is also possible to choose among standard pre-whitening or imagenet normalization
 
