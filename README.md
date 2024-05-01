@@ -60,7 +60,7 @@ In this way we can bring a mask (visually all black but in reality contains valu
 
 ### Patching
 
-Now we come to the actual patching, if we had enabled the pre-split we will patch the out of the pre-split otherwise the WSI parent images
+Now we come to the actual patching, if we had enabled the pre-split we will patch from the output path of the pre-split otherwise the WSI parent images path defined in the config file
 
 Therefore, assuming we now have 16 wsi at 1024x1024 we can adjust the patch size in the config file in `out_patch_size`, we will assume it to be `256` thus obtaining 16 patches for each wsi
 
