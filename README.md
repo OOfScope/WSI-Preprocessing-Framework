@@ -41,6 +41,9 @@ In this way we can bring a mask (visually all black but in reality contains valu
 <img src="res/cmapped_whole_mask.png" width="250px">
 
 
+<br>
+<br>
+
 > sub mask color mapping 
 > 1/16 of the above whole mask, coordinates (0,0):
 
@@ -115,6 +118,18 @@ The output csv file will look like this (real sample):
 |0013     |1      |0        |0       |0           |1     |1          |0            |0           |0               |1         |0.8333845138549805|0.0                 |0.0                  |0.0                 |0.16661548614501953 |TopKThrLabeling_k2_thr0.1|
 |0014     |1      |0        |0       |0           |0     |1          |0            |1           |1               |1         |0.9549198150634766|0.0                 |0.012845039367675781 |0.0003204345703125  |0.031914710998535156|TopKThrLabeling_k2_thr0.1|
 |0015     |1      |0        |0       |0           |0     |1          |1            |1           |1               |1         |0.9766769409179688|0.011180877685546875|0.0009765625         |0.011074066162109375|9.1552734375e-05    |TopKThrLabeling_k2_thr0.1|
+
+### Balancer
+
+The balancer as of today simply asserts no class has 0 samples, if this happens the balancer will halt and lists all of the affected classes
+
+To further facilitate this task, some graphs are constructed and saved in the `plots/` folder, such as the class graph across samples and the label graph across samples
+
+<img src="res/classes_across_samples.png" width="350px">
+<br>
+<br>
+<img src="res/labels_per_sample.png" width="350px">
+
 
 
 ## TCGA Dataset
