@@ -1,7 +1,7 @@
 # WSI Preprocessing, Annotation and Patching
 
 
-## Synthetic dataset pipeline (diffinfinite)
+## Synthetic dataset pipeline
 
 ### Initial setup
 

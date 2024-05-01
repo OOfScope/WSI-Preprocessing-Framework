@@ -448,14 +448,14 @@ def is_wsi(config: Munch):
 def main():
 
     parser = argparse.ArgumentParser(
-        description="WSI-Patch-Extractor: Extract patches as images from WSI files."
+        description="WSI-Preprocessing-Framework: preprocess wsis end to end."
     )
 
     parser.add_argument(
         "--config_path",
         default="config.yaml",
         type=str,
-        help="wsi-patch-extractor config filepath",
+        help="wsi-preprocessing-framework config filepath",
     )
     args = parser.parse_args()
 
