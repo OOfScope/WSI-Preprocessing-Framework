@@ -391,10 +391,13 @@ def is_diffinfinite(config: Munch):
         if config.annotator.balancer.enabled:
             if any(column_sums == 0):
                 print('\n-----------------------------------')
-                print('\n!! Some classes are not present at all in the dataset, balancer can not be applied')
+                print('!! Some classes are not present at all in the dataset, balancer can not be applied')
                 print(f"Classes with 0 samples: {column_sums[column_sums == 0].index.tolist()}")
                 print('-----------------------------------\n')                
                 return
+            
+            overrepresented_class = column_sums.idxmax()
+            
             
 
 def is_wsi(config: Munch):
