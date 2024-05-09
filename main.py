@@ -100,6 +100,11 @@ def cmap_mask(mask):
         2: (255, 0, 0),    # Necrosis
         3: (0, 255, 0),    # Tumor Stroma
         4: (0, 255, 255),  # Others
+        5: (104, 200, 204), 
+        6: (125, 42, 33),   
+        7: (157, 83, 139),  
+        8: (43, 164, 227),  
+        9: (57, 69, 166)    
     }
 
     
@@ -296,6 +301,10 @@ def is_diffinfinite(config: Munch):
             assert len(samples_paths) > 0, 'invalid presplits found'
             assert len(samples_paths) % 2 == 0, 'potential invalid presplits found'
             
+            if config.diffclasses != 5:
+                print(f'\n\n!! Warning: diffclasses is not 5, halting here\n\n')
+                exit(0)
+            
             classes = ['Unknown', 'Carcinoma', 'Necrosis', 'Tumor_Stroma', 'Others']
             ABS_classes = [f'ABS_{c}' for c in classes]
             PERC_classes = [f'PERC_{c}' for c in classes]
@@ -330,6 +339,9 @@ def is_diffinfinite(config: Munch):
                     mask_tensor = pil_to_tensor(mask)
                     abs_labels = np.unique(mask_tensor)
                     print(f'\nsid "{asset}" shows absolute labels: {abs_labels}')
+                    
+                    if config.diffclasses != 5:
+                        continue
                     
                     
                     dic['sample_id'].append(sample_id_number)

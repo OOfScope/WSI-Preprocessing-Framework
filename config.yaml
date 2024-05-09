@@ -4,6 +4,7 @@ is_diffinfinite: True # we are not extracting from svs files
 patching_enabled: True
 diffinfinite_macro_path: diffinfinite_macropatches/
 diffinfinite_out_path: diffinfinite_out/
+diffclasses: 10
 out_patch_size: 256
 grayscale_patches: False
 using_masks: True
@@ -21,8 +22,8 @@ split:
 
 annotator:
   enabled: True
-  strategy: 'TopKThrLabeling'  # [TopKLabeling, TopKThrLabeling]
-  k: 2
+  strategy: 'TopKLabeling'  # [TopKLabeling, TopKThrLabeling]
+  k: 4
   thr: 0.1
   compute_perc_by_ignoring_unknown_class: True
   csv_filename: 'annotator.csv'
