@@ -92,23 +92,34 @@ def load_assets(asset_paths):
         print(f"Error: {e}")       
         
         
-def cmap_mask(mask):
+def cmap_mask(mask, diffclasses):
+    if diffclasses == 5:
+        color_map = {
+            0: (0, 0, 0),      # Unknown
+            1: (0, 0, 255),    # Carcinoma
+            2: (255, 0, 0),    # Necrosis
+            3: (0, 255, 0),    # Tumor Stroma
+            4: (0, 255, 255),  # Others
+        }
+    elif diffclasses == 10:
+            color_map = {
+            0: (0, 0, 0),       # Black (Unknown)
+            4: (255, 0, 0),     # Red (Carcinoma)
+            7: (0, 255, 0),     # Green (Necrosis)
+            8: (0, 0, 255),     # Blue (Tumor Stroma)
+            9: (255, 255, 0),   # Yellow (Others)
+            1: (255, 0, 255),   # Magenta (Alveole)
+            3: (0, 255, 255),   # Cyan (Artifacts)
+            5: (128, 128, 128), # Gray (Cartilage)
+            6: (255, 128, 0),   # Orange (Connections)
+            2: (0, 128, 255)    # Sky Blue (Artery)
+        }
     
-    color_map = {
-        0: (0, 0, 0),      # Unknown
-        1: (0, 0, 255),    # Carcinoma
-        2: (255, 0, 0),    # Necrosis
-        3: (0, 255, 0),    # Tumor Stroma
-        4: (0, 255, 255),  # Others
-        5: (104, 200, 204), 
-        6: (125, 42, 33),   
-        7: (157, 83, 139),  
-        8: (43, 164, 227),  
-        9: (57, 69, 166)    
-    }
+    unique_rgbs = set()
 
-    
-    # alternative: torch.zeros_like()
+    for rgb in color_map.values():
+        assert rgb not in unique_rgbs, "RGB values are not unique: error on" + str(rgb)
+        unique_rgbs.add(rgb)
     
     cmapd_mask = np.zeros((mask.size[0], mask.size[1], 3), dtype=np.uint8)
     tmask = pil_to_tensor(mask)
@@ -119,7 +130,7 @@ def cmap_mask(mask):
     
     return cmapd_mask, transforms.ToPILImage()(cmapd_mask.squeeze())
 
-def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped_submasks):
+def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped_submasks, diffclasses):
     
     try:
         mkdir(out_path)
@@ -160,7 +171,7 @@ def do_pre_split(image_tensors, mask_tensors, factor, out_path, gen_color_mapped
                     
                     
                     if gen_color_mapped_submasks:
-                        _, cmapped_mask = cmap_mask(sub_mask)
+                        _, cmapped_mask = cmap_mask(sub_mask, diffclasses)
                         cmapped_mask.save(f'{out_path}/{counter:04d}/sub_cmapped_mask_{counter:04d}.png')
 
                     counter += 1
@@ -192,11 +203,13 @@ def is_diffinfinite(config: Munch):
     # masks are in png but I prefer to sort by substr and not by filext
     assets = glob(input_dir + '/**/*.jpg', recursive=True) +  glob(input_dir + '/**/*.png')
     
+    assert len(assets) != 0, "No assets found, please check your input directory"
+
     image_tensors, mask_tensors = load_assets(assets)
     
 
     if config.split.enabled and config.patching_enabled:
-        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.diffinfinite_out_path + config.split.presplit_out_path, config.split.gen_color_mapped_submasks)
+        do_pre_split(image_tensors, mask_tensors, config.split.factor, config.diffinfinite_out_path + config.split.presplit_out_path, config.split.gen_color_mapped_submasks, config.diffclasses)
     
 
     if config.cmap_whole_masks:
@@ -217,7 +230,7 @@ def is_diffinfinite(config: Munch):
                 whole_mask_pil = Image.open(asset)
                 arr = np.array(whole_mask_pil, dtype='uint8')
                 whole_mask_pil = Image.fromarray(arr)
-                _, cmapped_whole_mask = cmap_mask(whole_mask_pil)
+                _, cmapped_whole_mask = cmap_mask(whole_mask_pil, config.diffclasses)
                 cmapped_whole_mask.save(f'{output_base_dir}/{config.cmap_whole_masks_out}/cmapped_mask_{sample_id_number}.png')
 
 
